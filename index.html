@@ -55,26 +55,26 @@
               snapshot.forEach(function (childSnapshot) {
                 const registro = childSnapshot.val();
                 const cardCol = document.createElement("div");
-                cardCol.className = "col-sm-6 col-md-4 col-lg-3 mb-3";
+                cardCol.className = "col-sm-6 col-md-4 col-lg-3 mb-4";
 
                 cardCol.innerHTML = `
-                  <div class="card h-100 shadow-sm">
-                    <div class="card-body">
-                      <h5 class="card-title">${registro.edificio}</h5>
-                      <p class="card-text"><strong>Citófono:</strong> ${registro.citofono}</p>
-                      <p class="card-text"><strong>DVR:</strong> ${registro.dvr}</p>
-                      <p class="card-text"><strong>WiFi:</strong> ${registro.wifi}</p>
-                      <p class="card-text"><strong>Otros:</strong> ${registro.otros || "N/A"}</p>
-                    </div>
-                    <div class="card-footer bg-transparent border-top-0">
-                      <button class="btn btn-warning btn-sm" onclick="editarRegistro('${
-                        childSnapshot.key
-                      }')">Editar</button>
-                      <button class="btn btn-danger btn-sm" onclick="eliminarRegistro('${
-                        childSnapshot.key
-                      }')">Eliminar</button>
-                    </div>
-                  </div>
+                  <div class="card card-modern h-100">
+  <div class="card-body">
+    <h5 class="card-title">${registro.edificio}</h5>
+    <p class="card-text"><strong>Citófono:</strong> ${registro.citofono}</p>
+    <p class="card-text"><strong>DVR:</strong> ${registro.dvr}</p>
+    <p class="card-text"><strong>WiFi:</strong> ${registro.wifi}</p>
+    <p class="card-text"><strong>Otros:</strong> ${registro.otros || "N/A"}</p>
+  </div>
+  <div class="card-footer bg-transparent border-0">
+    <button class="btn btn-warning btn-sm btn-modern" onclick="editarRegistro('${childSnapshot.key}')">
+      Editar
+    </button>
+    <button class="btn btn-danger btn-sm btn-modern" onclick="eliminarRegistro('${childSnapshot.key}')">
+      Eliminar
+    </button>
+  </div>
+</div>
                 `;
                 cardsContainer.appendChild(cardCol);
               });
@@ -271,6 +271,64 @@
       .btn-primary:hover {
         background-color: #c9a227;
       }
+      /* Estilos para cards modernos y elegantes */
+      .card-modern {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .card-modern:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .card-title {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #1CB698;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+  .card-text {
+    margin-top: 9%;
+    font-size: 1rem;
+    color: #ddd;
+  }
+
+  .btn-modern {
+    border-radius: 8px;
+    padding: 8px 15px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+  }
+
+  .btn-warning {
+    background: linear-gradient(135deg, #FFC107, #FF8C00);
+    border: none;
+    color: white;
+  }
+
+  .btn-danger {
+    background: linear-gradient(135deg, #FF4C4C, #D7263D);
+    border: none;
+    color: white;
+  }
+
+  .btn-modern:hover {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+
+  .card-footer {
+    display: flex;
+    justify-content: space-between;
+  }
       /* Estilos para el loader */
       #loading {
         position: fixed;
@@ -297,7 +355,7 @@
       <div class="container-fluid">
         <a class="navbar-brand" href="#">
           <img src="img/logo24-7.png" alt="Logo" width="60" height="60" class="d-inline-block align-text-top img-fluid" />
-          <span class="ms-2" style="text-align: center">CREDENCIALES DE 24-7 </span>
+          <span class="ms-2" style="text-align: center">CREDENCIALES DE 24-7</span>
         </a>
       </div>
     </nav>
