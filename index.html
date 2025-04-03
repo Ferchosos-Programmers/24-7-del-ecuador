@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Registro de Claves</title>
+    <link rel="icon" type="image/png" href="img/logo24-7.png">
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
@@ -21,7 +22,7 @@
         push,
         get,
         remove,
-        update
+        update,
       } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
       // Configuración de Firebase
@@ -67,10 +68,14 @@
     <p class="card-text"><strong>Otros:</strong> ${registro.otros || "N/A"}</p>
   </div>
   <div class="card-footer bg-transparent border-0">
-    <button class="btn btn-warning btn-sm btn-modern" onclick="editarRegistro('${childSnapshot.key}')">
+    <button class="btn btn-warning btn-sm btn-modern" onclick="editarRegistro('${
+      childSnapshot.key
+    }')">
       Editar
     </button>
-    <button class="btn btn-danger btn-sm btn-modern" onclick="eliminarRegistro('${childSnapshot.key}')">
+    <button class="btn btn-danger btn-sm btn-modern" onclick="eliminarRegistro('${
+      childSnapshot.key
+    }')">
       Eliminar
     </button>
   </div>
@@ -89,68 +94,72 @@
       }
 
       // Evento para agregar o actualizar registro
-      document.getElementById("registroForm").addEventListener("submit", function (e) {
-        e.preventDefault();
+      document
+        .getElementById("registroForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
 
-        const edificio = document.getElementById("edificio").value;
-        const citofono = document.getElementById("citofono").value;
-        const dvr = document.getElementById("dvr").value;
-        const wifi = document.getElementById("wifi").value;
-        const otros = document.getElementById("otros").value;
+          const edificio = document.getElementById("edificio").value;
+          const citofono = document.getElementById("citofono").value;
+          const dvr = document.getElementById("dvr").value;
+          const wifi = document.getElementById("wifi").value;
+          const otros = document.getElementById("otros").value;
 
-        if (editMode && editId) {
-          // Actualizar registro en modo edición
-          const registroRef = ref(db, "registros/" + editId);
-          update(registroRef, {
-            edificio: edificio,
-            citofono: citofono,
-            dvr: dvr,
-            wifi: wifi,
-            otros: otros,
-          })
-            .then(() => {
-              Swal.fire({
-                title: "¡Registro actualizado!",
-                text: "El registro se actualizó correctamente.",
-                icon: "success",
-                confirmButtonText: "Aceptar",
-              }).then(() => {
-                window.location.reload();
-              });
+          if (editMode && editId) {
+            // Actualizar registro en modo edición
+            const registroRef = ref(db, "registros/" + editId);
+            update(registroRef, {
+              edificio: edificio,
+              citofono: citofono,
+              dvr: dvr,
+              wifi: wifi,
+              otros: otros,
             })
-            .catch((error) => {
-              console.error("Error al actualizar: ", error);
-            });
-        } else {
-          // Agregar nuevo registro
-          const registrosRef = ref(db, "registros");
-          const newRegistroRef = push(registrosRef);
-          set(newRegistroRef, {
-            edificio: edificio,
-            citofono: citofono,
-            dvr: dvr,
-            wifi: wifi,
-            otros: otros,
-          })
-            .then(() => {
-              document.getElementById("registroForm").reset();
-              var myModal = new bootstrap.Modal(document.getElementById("registroModal"));
-              myModal.hide();
-              Swal.fire({
-                title: "¡Registro guardado!",
-                text: "El registro se guardó correctamente.",
-                icon: "success",
-                confirmButtonText: "Aceptar",
-              }).then(() => {
-                window.location.reload();
+              .then(() => {
+                Swal.fire({
+                  title: "¡Registro actualizado!",
+                  text: "El registro se actualizó correctamente.",
+                  icon: "success",
+                  confirmButtonText: "Aceptar",
+                }).then(() => {
+                  window.location.reload();
+                });
+              })
+              .catch((error) => {
+                console.error("Error al actualizar: ", error);
               });
-              mostrarRegistros();
+          } else {
+            // Agregar nuevo registro
+            const registrosRef = ref(db, "registros");
+            const newRegistroRef = push(registrosRef);
+            set(newRegistroRef, {
+              edificio: edificio,
+              citofono: citofono,
+              dvr: dvr,
+              wifi: wifi,
+              otros: otros,
             })
-            .catch((error) => {
-              console.error("Error al registrar: ", error);
-            });
-        }
-      });
+              .then(() => {
+                document.getElementById("registroForm").reset();
+                var myModal = new bootstrap.Modal(
+                  document.getElementById("registroModal")
+                );
+                myModal.hide();
+                Swal.fire({
+                  title: "¡Registro guardado!",
+                  text: "El registro se guardó correctamente.",
+                  icon: "success",
+                  confirmButtonText: "Aceptar",
+                }).then(() => {
+                  window.location.reload();
+                });
+                mostrarRegistros();
+              })
+              .catch((error) => {
+                console.error("Error al registrar: ", error);
+              });
+          }
+        });
 
       // Función para eliminar registro con confirmación
       function eliminarRegistro(id) {
@@ -168,12 +177,20 @@
             const registroRef = ref(db, "registros/" + id);
             remove(registroRef)
               .then(() => {
-                Swal.fire("Eliminado!", "El registro ha sido eliminado.", "success");
+                Swal.fire(
+                  "Eliminado!",
+                  "El registro ha sido eliminado.",
+                  "success"
+                );
                 mostrarRegistros();
               })
               .catch((error) => {
                 console.error("Error al eliminar registro: ", error);
-                Swal.fire("Error", "Hubo un problema al eliminar el registro.", "error");
+                Swal.fire(
+                  "Error",
+                  "Hubo un problema al eliminar el registro.",
+                  "error"
+                );
               });
           }
         });
@@ -193,13 +210,18 @@
               document.getElementById("wifi").value = registro.wifi;
               document.getElementById("otros").value = registro.otros || "";
               // Cambiar título del modal y texto del botón
-              document.querySelector(".modal-title").textContent = "Editar Credenciales";
-              document.querySelector("#registroForm button[type='submit']").textContent = "Actualizar";
+              document.querySelector(".modal-title").textContent =
+                "Editar Credenciales";
+              document.querySelector(
+                "#registroForm button[type='submit']"
+              ).textContent = "Actualizar";
               // Activar modo edición
               editMode = true;
               editId = id;
               // Abrir el modal
-              var myModal = new bootstrap.Modal(document.getElementById("registroModal"));
+              var myModal = new bootstrap.Modal(
+                document.getElementById("registroModal")
+              );
               myModal.show();
             }
           })
@@ -273,62 +295,62 @@
       }
       /* Estilos para cards modernos y elegantes */
       .card-modern {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border-radius: 15px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    padding: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
 
-  .card-modern:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
-  }
+      .card-modern:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+      }
 
-  .card-title {
-    font-size: 1rem;
-    font-weight: bold;
-    color: #1CB698;
-    text-transform: uppercase;
-    text-align: center;
-}
+      .card-title {
+        font-size: 1rem;
+        font-weight: bold;
+        color: #1cb698;
+        text-transform: uppercase;
+        text-align: center;
+      }
 
-  .card-text {
-    margin-top: 9%;
-    font-size: 1rem;
-    color: #ddd;
-  }
+      .card-text {
+        margin-top: 9%;
+        font-size: 1rem;
+        color: #ddd;
+      }
 
-  .btn-modern {
-    border-radius: 8px;
-    padding: 8px 15px;
-    font-weight: bold;
-    transition: all 0.3s ease;
-  }
+      .btn-modern {
+        border-radius: 8px;
+        padding: 8px 15px;
+        font-weight: bold;
+        transition: all 0.3s ease;
+      }
 
-  .btn-warning {
-    background: linear-gradient(135deg, #FFC107, #FF8C00);
-    border: none;
-    color: white;
-  }
+      .btn-warning {
+        background: linear-gradient(135deg, #ffc107, #ff8c00);
+        border: none;
+        color: white;
+      }
 
-  .btn-danger {
-    background: linear-gradient(135deg, #FF4C4C, #D7263D);
-    border: none;
-    color: white;
-  }
+      .btn-danger {
+        background: linear-gradient(135deg, #ff4c4c, #d7263d);
+        border: none;
+        color: white;
+      }
 
-  .btn-modern:hover {
-    transform: scale(1.05);
-    opacity: 0.9;
-  }
+      .btn-modern:hover {
+        transform: scale(1.05);
+        opacity: 0.9;
+      }
 
-  .card-footer {
-    display: flex;
-    justify-content: space-between;
-  }
+      .card-footer {
+        display: flex;
+        justify-content: space-between;
+      }
       /* Estilos para el loader */
       #loading {
         position: fixed;
@@ -348,20 +370,39 @@
   <body>
     <!-- Loader (Logo de Cargando) -->
     <div id="loading">
-      <img src="img/logo24-7.png" alt="Cargando..." width="150" height="150" class="img-fluid" />
+      <img
+        src="img/logo24-7.png"
+        alt="Cargando..."
+        width="150"
+        height="150"
+        class="img-fluid"
+      />
     </div>
 
     <nav class="navbar navbar-dark p-3">
       <div class="container-fluid">
         <a class="navbar-brand" href="#">
-          <img src="img/logo24-7.png" alt="Logo" width="60" height="60" class="d-inline-block align-text-top img-fluid" />
-          <span class="ms-2" style="text-align: center">CREDENCIALES DE 24-7</span>
+          <img
+            src="img/logo24-7.png"
+            alt="Logo"
+            width="60"
+            height="60"
+            class="d-inline-block align-text-top img-fluid"
+          />
+          <span class="ms-2" style="text-align: center"
+            >CREDENCIALES DE 24-7</span
+          >
         </a>
       </div>
     </nav>
 
     <div class="container mt-5 content">
-      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#registroModal" onclick="resetForm()">
+      <button
+        class="btn btn-primary"
+        data-bs-toggle="modal"
+        data-bs-target="#registroModal"
+        onclick="resetForm()"
+      >
         Añadir Registro
       </button>
       <hr />
@@ -375,17 +416,32 @@
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">Registrar Credenciales</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
           </div>
           <div class="modal-body">
             <form id="registroForm">
               <div class="mb-3">
                 <label class="form-label">Nombre del Edificio</label>
-                <input type="text" class="form-control" id="edificio" required />
+                <input
+                  type="text"
+                  class="form-control"
+                  id="edificio"
+                  required
+                />
               </div>
               <div class="mb-3">
                 <label class="form-label">Clave del Citófono</label>
-                <input type="text" class="form-control" id="citofono" required />
+                <input
+                  type="text"
+                  class="form-control"
+                  id="citofono"
+                  required
+                />
               </div>
               <div class="mb-3">
                 <label class="form-label">Clave del DVR</label>
@@ -418,8 +474,11 @@
       // Función para reiniciar el formulario a modo "registrar" cuando se abra el modal desde "Añadir Registro"
       function resetForm() {
         document.getElementById("registroForm").reset();
-        document.querySelector(".modal-title").textContent = "Registrar Credenciales";
-        document.querySelector("#registroForm button[type='submit']").textContent = "Registrar";
+        document.querySelector(".modal-title").textContent =
+          "Registrar Credenciales";
+        document.querySelector(
+          "#registroForm button[type='submit']"
+        ).textContent = "Registrar";
         // Desactivar modo edición
         editMode = false;
         editId = null;
