@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Registro de Claves</title>
+    <link rel="icon" type="image/png" href="img/logo24-7.png" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Incluir SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script type="module">
+      // Importar los módulos necesarios de Firebase
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+      import {
+        getDatabase,
+        ref,
+        set,
+        push,
+        get,
+        remove,
+        update,
+      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+      import {
+        getAuth,
+        signOut,
+      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"; // Importar para la autenticación
+
+      // Configuración de Firebase
+      const firebaseConfig = {
+        apiKey: "AIzaSyAeSR7s-PbwDWyfwrzKC5C-EHEvKbVweVc",
+        authDomain: "delecuador-61762.firebaseapp.com",
+        databaseURL: "https://delecuador-61762-default-rtdb.firebaseio.com",
+        projectId: "delecuador-61762",
+        storageBucket: "delecuador-61762.appspot.com",
+        messagingSenderId: "1091381471096",
+        appId: "1:1091381471096:web:aa7475056d65e7b2f14a8d",
+      };
+
+      // Inicializar Firebase
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+
+      // Variables globales para el modo edición
+      let editMode = false;
+      let editId = null;
+
+      // Función para mostrar los registros como cards
+      function mostrarRegistros() {
+        const cardsContainer = document.getElementById("cardsContainer");
+        cardsContainer.innerHTML = ""; // Limpiar el contenedor de cards
+
+        const registrosRef = ref(db, "registros");
+        get(registrosRef)
+          .then((snapshot) => {
+            if (snapshot.exists()) {
+              snapshot.forEach(function (childSnapshot) {
+                const registro = childSnapshot.val();
+                const cardCol = document.createElement("div");
+                cardCol.className = "col-sm-6 col-md-4 col-lg-3 mb-4";
+
+                cardCol.innerHTML = `
+                  <div class="card card-modern h-100">
+  <div class="card-body">
+    <h5 class="card-title">${registro.edificio}</h5>
+    <p class="card-text"><strong>Citófono:</strong> ${registro.citofono}</p>
+    <p class="card-text"><strong>DVR:</strong> ${registro.dvr}</p>
+    <p class="card-text"><strong>WiFi:</strong> ${registro.wifi}</p>
+    <p class="card-text"><strong>Otros:</strong> ${registro.otros || "N/A"}</p>
+  </div>
+  <div class="card-footer bg-transparent border-0">
+    <button class="btn btn-warning btn-sm btn-modern" onclick="editarRegistro('${
+      childSnapshot.key
+    }')">
+      Editar
+    </button>
+    <button class="btn btn-danger btn-sm btn-modern" onclick="eliminarRegistro('${
+      childSnapshot.key
+    }')">
+      Eliminar
+    </button>
+  </div>
+</div>
+                `;
+                cardsContainer.appendChild(cardCol);
+              });
+            }
+          })
+          .catch((error) => {
+            console.error("Error al cargar los registros: ", error);
+          })
+          .finally(() => {
+            document.getElementById("loading").style.display = "none";
+          });
+      }
+
+      // Evento para agregar o actualizar registro
+      document
+        .getElementById("registroForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          const edificio = document.getElementById("edificio").value;
+          const citofono = document.getElementById("citofono").value;
+          const dvr = document.getElementById("dvr").value;
+          const wifi = document.getElementById("wifi").value;
+          const otros = document.getElementById("otros").value;
+
+          if (editMode && editId) {
+            // Actualizar registro en modo edición
+            const registroRef = ref(db, "registros/" + editId);
+            update(registroRef, {
+              edificio: edificio,
+              citofono: citofono,
+              dvr: dvr,
+              wifi: wifi,
+              otros: otros,
+            })
+              .then(() => {
+                Swal.fire({
+                  title: "¡Registro actualizado!",
+                  text: "El registro se actualizó correctamente.",
+                  icon: "success",
+                  confirmButtonText: "Aceptar",
+                }).then(() => {
+                  window.location.reload();
+                });
+              })
+              .catch((error) => {
+                console.error("Error al actualizar: ", error);
+              });
+          } else {
+            // Agregar nuevo registro
+            const registrosRef = ref(db, "registros");
+            const newRegistroRef = push(registrosRef);
+            set(newRegistroRef, {
+              edificio: edificio,
+              citofono: citofono,
+              dvr: dvr,
+              wifi: wifi,
+              otros: otros,
+            })
+              .then(() => {
+                document.getElementById("registroForm").reset();
+                var myModal = new bootstrap.Modal(
+                  document.getElementById("registroModal")
+                );
+                myModal.hide();
+                Swal.fire({
+                  title: "¡Registro guardado!",
+                  text: "El registro se guardó correctamente.",
+                  icon: "success",
+                  confirmButtonText: "Aceptar",
+                }).then(() => {
+                  window.location.reload();
+                });
+                mostrarRegistros();
+              })
+              .catch((error) => {
+                console.error("Error al registrar: ", error);
+              });
+          }
+        });
+
+      // Función para eliminar registro con confirmación
+      function eliminarRegistro(id) {
+        Swal.fire({
+          title: "¿Estás seguro?",
+          text: "¡Este registro será eliminado permanentemente!",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#d33",
+          cancelButtonColor: "#3085d6",
+          confirmButtonText: "Sí, eliminarlo",
+          cancelButtonText: "Cancelar",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            const registroRef = ref(db, "registros/" + id);
+            remove(registroRef)
+              .then(() => {
+                Swal.fire(
+                  "Eliminado!",
+                  "El registro ha sido eliminado.",
+                  "success"
+                );
+                mostrarRegistros();
+              })
+              .catch((error) => {
+                console.error("Error al eliminar registro: ", error);
+                Swal.fire(
+                  "Error",
+                  "Hubo un problema al eliminar el registro.",
+                  "error"
+                );
+              });
+          }
+        });
+      }
+
+      // Función para editar un registro
+      function editarRegistro(id) {
+        const registroRef = ref(db, "registros/" + id);
+        get(registroRef)
+          .then((snapshot) => {
+            if (snapshot.exists()) {
+              const registro = snapshot.val();
+              // Precargar el formulario con la información del registro
+              document.getElementById("edificio").value = registro.edificio;
+              document.getElementById("citofono").value = registro.citofono;
+              document.getElementById("dvr").value = registro.dvr;
+              document.getElementById("wifi").value = registro.wifi;
+              document.getElementById("otros").value = registro.otros || "";
+              // Cambiar título del modal y texto del botón
+              document.querySelector(".modal-title").textContent =
+                "Editar Credenciales";
+              document.querySelector(
+                "#registroForm button[type='submit']"
+              ).textContent = "Actualizar";
+              // Activar modo edición
+              editMode = true;
+              editId = id;
+              // Abrir el modal
+              var myModal = new bootstrap.Modal(
+                document.getElementById("registroModal")
+              );
+              myModal.show();
+            }
+          })
+          .catch((error) => {
+            console.error("Error al obtener el registro: ", error);
+          });
+      }
+
+      function cerrarSesion() {
+        const auth = getAuth(app); // Obtener la instancia de autenticación
+        signOut(auth)
+          .then(() => {
+            window.location.href = "index.html"; // Redirigir al login
+          })
+          .catch((error) => {
+            console.error("Error al cerrar sesión:", error); // Manejo de errores
+          });
+      }
+
+      // Exponer funciones al ámbito global para usarlas en el HTML
+      window.eliminarRegistro = eliminarRegistro;
+      window.editarRegistro = editarRegistro;
+      window.cerrarSesion = cerrarSesion;
+
+      // Cargar registros cuando la página cargue
+      window.onload = mostrarRegistros;
+    </script>
+
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #1a374d, #406882);
+        color: #ffffff;
+        font-family: "Poppins", sans-serif;
+      }
+      .content {
+        flex: 1;
+        padding: 20px;
+      }
+      .navbar {
+        background: #406882;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+      }
+      .navbar-brand {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+      }
+      .navbar-brand img {
+        max-width: 100%;
+        height: auto;
+      }
+      .navbar-brand span {
+        font-weight: bold;
+        font-size: 1.3rem;
+        color: #d4af37;
+      }
+      footer {
+        background: #406882;
+        text-align: center;
+        padding: 15px;
+        width: 100%;
+        position: relative;
+        bottom: 0;
+        color: #ffffff;
+      }
+      .modal-content {
+        background: linear-gradient(135deg, #1a374d, #406882);
+        color: #ffffff;
+        border-radius: 10px;
+      }
+      .btn-primary {
+        background-color: #d4af37;
+        border: none;
+        color: #1a374d;
+        transition: 0.3s;
+      }
+      .btn-primary:hover {
+        background-color: #c9a227;
+      }
+      /* Estilos para cards modernos y elegantes */
+      .card-modern {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .card-modern:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+      }
+
+      .card-title {
+        font-size: 1rem;
+        font-weight: bold;
+        color: #1cb698;
+        text-transform: uppercase;
+        text-align: center;
+      }
+
+      .card-text {
+        margin-top: 9%;
+        font-size: 1rem;
+        color: #ddd;
+      }
+
+      .btn-modern {
+        border-radius: 8px;
+        padding: 8px 15px;
+        font-weight: bold;
+        transition: all 0.3s ease;
+      }
+
+      .btn-warning {
+        background: linear-gradient(135deg, #ffc107, #ff8c00);
+        border: none;
+        color: white;
+      }
+
+      .btn-danger {
+        background: linear-gradient(135deg, #ff4c4c, #d7263d);
+        border: none;
+        color: white;
+      }
+
+      .btn-modern:hover {
+        transform: scale(1.05);
+        opacity: 0.9;
+      }
+
+      .card-footer {
+        display: flex;
+        justify-content: space-between;
+      }
+      /* Estilos para el loader */
+      #loading {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Loader (Logo de Cargando) -->
+    <div id="loading">
+      <img
+        src="img/logo24-7.png"
+        alt="Cargando..."
+        width="150"
+        height="150"
+        class="img-fluid"
+      />
+    </div>
+
+    <nav class="navbar navbar-dark p-3">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+          <a class="navbar-brand d-flex align-items-center" href="#">
+            <img
+              src="img/logo24-7.png"
+              alt="Logo"
+              width="60"
+              height="60"
+              class="d-inline-block align-text-top img-fluid"
+            />
+            <span class="ms-2" style="text-align: center; font-size: 1.25rem;">CREDENCIALES DE 24-7</span>
+            <button class="btn btn-danger ms-auto" onclick="cerrarSesion()">
+              Cerrar sesión
+            </button>
+          </a>
+        </div>
+      </nav>
+      
+
+    <div class="container mt-5 content">
+      <button
+        class="btn btn-primary"
+        data-bs-toggle="modal"
+        data-bs-target="#registroModal"
+        onclick="resetForm()"
+      >
+        Añadir Registro
+      </button>
+      <hr />
+      <h3>Lista de Registros</h3>
+      <div class="row" id="cardsContainer"></div>
+    </div>
+
+    <!-- Modal para registrar/editar -->
+    <div class="modal fade" id="registroModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Registrar Credenciales</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form id="registroForm">
+              <div class="mb-3">
+                <label class="form-label">Nombre del Edificio</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="edificio"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Clave del Citófono</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="citofono"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Clave del DVR</label>
+                <input type="text" class="form-control" id="dvr" required />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Clave WiFi</label>
+                <input type="text" class="form-control" id="wifi" required />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Otros</label>
+                <input type="text" class="form-control" id="otros" />
+              </div>
+              <button type="submit" class="btn btn-primary">Registrar</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="mt-auto">
+      <p>Síguenos en redes sociales</p>
+      <a href="#" class="text-white mx-2">Facebook</a>
+      <a href="#" class="text-white mx-2">Twitter</a>
+      <a href="#" class="text-white mx-2">Instagram</a>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Función para reiniciar el formulario a modo "registrar" cuando se abra el modal desde "Añadir Registro"
+      function resetForm() {
+        document.getElementById("registroForm").reset();
+        document.querySelector(".modal-title").textContent =
+          "Registrar Credenciales";
+        document.querySelector(
+          "#registroForm button[type='submit']"
+        ).textContent = "Registrar";
+        // Desactivar modo edición
+        editMode = false;
+        editId = null;
+      }
+    </script>
+  </body>
+</html>
